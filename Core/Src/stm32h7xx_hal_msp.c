@@ -107,8 +107,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /* USER CODE BEGIN UART4_MspInit 1 */
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
   /* USER CODE END UART4_MspInit 1 */
   }
 
@@ -138,6 +136,50 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
   /* USER CODE BEGIN UART4_MspDeInit 1 */
 
   /* USER CODE END UART4_MspDeInit 1 */
+  }
+
+}
+
+/**
+* @brief PCD MSP Initialization
+* This function configures the hardware resources used in this example
+* @param hpcd: PCD handle pointer
+* @retval None
+*/
+void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
+{
+  if(hpcd->Instance==USB_OTG_HS)
+  {
+  /* USER CODE BEGIN USB_OTG_HS_MspInit 0 */
+
+  /* USER CODE END USB_OTG_HS_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
+  /* USER CODE BEGIN USB_OTG_HS_MspInit 1 */
+
+  /* USER CODE END USB_OTG_HS_MspInit 1 */
+  }
+
+}
+
+/**
+* @brief PCD MSP De-Initialization
+* This function freeze the hardware resources used in this example
+* @param hpcd: PCD handle pointer
+* @retval None
+*/
+void HAL_PCD_MspDeInit(PCD_HandleTypeDef* hpcd)
+{
+  if(hpcd->Instance==USB_OTG_HS)
+  {
+  /* USER CODE BEGIN USB_OTG_HS_MspDeInit 0 */
+
+  /* USER CODE END USB_OTG_HS_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_USB_OTG_HS_CLK_DISABLE();
+  /* USER CODE BEGIN USB_OTG_HS_MspDeInit 1 */
+
+  /* USER CODE END USB_OTG_HS_MspDeInit 1 */
   }
 
 }
