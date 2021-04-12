@@ -30,6 +30,7 @@
 #include <stdbool.h>
 #include "usb_descriptors.h"
 #include "tusb.h"
+#include "img.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -89,13 +90,13 @@ const osThreadAttr_t webserial_task_attributes = {
 /* USER CODE BEGIN PV */
 static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
 
-#define URL  "www.tinyusb.org/examples/webusb-serial"
+#define URL  "127.0.0.1"
 
 const tusb_desc_webusb_url_t desc_url =
 {
   .bLength         = 3 + sizeof(URL) - 1,
   .bDescriptorType = 3, // WEBUSB URL type
-  .bScheme         = 1, // 0: http, 1: https
+  .bScheme         = 0, // 0: http, 1: https
   .url             = URL
 };
 
@@ -521,7 +522,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 
           blink_interval_ms = BLINK_ALWAYS_ON;
 
-          tud_vendor_write_str("\r\nTinyUSB WebUSB device example\r\n");
+          //tud_vendor_write_str("\r\nTinyUSB WebUSB device example\r\n");
         }else
         {
           blink_interval_ms = BLINK_MOUNTED;
@@ -620,24 +621,50 @@ void cdc_task_handler(void *argument)
 * @retval None
 */
 /* USER CODE END Header_webserial_task_handler */
+#define min(a, b) (a) < (b) ? (a) : (b)
+uint8_t header[8] = {'+', '+', '+', '+', 0, 0, 0, 0};
 void webserial_task_handler(void *argument)
 {
   /* USER CODE BEGIN webserial_task_handler */
   /* Infinite loop */
+  uint8_t index = 0;
   for(;;)
   {
 	  if ( web_serial_connected )
 	  {
-	    if ( tud_vendor_available() )
-	    {
-	      uint8_t buf[64];
-	      uint32_t count = tud_vendor_read(buf, sizeof(buf));
+		 uint32_t imgSize = 0;
+		 uint8_t *img = NULL;
+		 if(index == 0)
+		 {
+			 imgSize = sizeof(_img1);
+			 img = &_img1;
+			 index = 1;
+		 }else{
+			 imgSize = sizeof(_img2);
+			 img = &_img2;
+			 index = 0;
+		 }
+		uint32_t sentSize = 0;
+		uint32_t time_count = HAL_GetTick();
 
-	      // echo back to both web serial and cdc
-	      echo_all(buf, count);
-	    }
+		header[4] = (imgSize & 0xFF000000) >> 24;
+		header[5] = (imgSize & 0xFF0000) >> 16;
+		header[6] = (imgSize & 0xFF00) >> 8;
+		header[7] = (imgSize & 0xFF);
+		tud_vendor_write(header, 8);
+		HAL_Delay(5);
+		while(1)
+		{
+			const uint32_t sendSize = min(imgSize - sentSize, 64);
+			sentSize += tud_vendor_write(&img[sentSize], sendSize);
+			if(sentSize == imgSize)
+			{
+				break;
+			}
+		}
+		LOG("Take time:%d\n\r", HAL_GetTick() - time_count);
 	  }
-    osDelay(1);
+    //osDelay(5000);
   }
   /* USER CODE END webserial_task_handler */
 }
