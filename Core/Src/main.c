@@ -207,8 +207,8 @@ int main(void)
   MX_DMA_Init();
   MX_UART4_Init();
   MX_USB_OTG_HS_PCD_Init();
-  MX_DCMI_Init();
-  MX_I2C4_Init();
+  //MX_DCMI_Init();
+  //MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
   USB_Init();
   NVIC_SetPriority(OTG_HS_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY );
