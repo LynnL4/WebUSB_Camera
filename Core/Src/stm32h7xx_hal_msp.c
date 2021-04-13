@@ -151,7 +151,7 @@ void HAL_DCMI_MspInit(DCMI_HandleTypeDef* hdcmi)
 
     /* DCMI DMA Init */
     /* DCMI_PSSI Init */
-    hdma_dcmi_pssi.Instance = DMA1_Stream1;
+    hdma_dcmi_pssi.Instance = DMA2_Stream1;
     hdma_dcmi_pssi.Init.Request = DMA_REQUEST_DCMI_PSSI;
     hdma_dcmi_pssi.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_dcmi_pssi.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -159,7 +159,7 @@ void HAL_DCMI_MspInit(DCMI_HandleTypeDef* hdcmi)
     hdma_dcmi_pssi.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
     hdma_dcmi_pssi.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
     hdma_dcmi_pssi.Init.Mode = DMA_CIRCULAR;
-    hdma_dcmi_pssi.Init.Priority = DMA_PRIORITY_VERY_HIGH;
+    hdma_dcmi_pssi.Init.Priority = DMA_PRIORITY_HIGH;
     hdma_dcmi_pssi.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
     hdma_dcmi_pssi.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
     hdma_dcmi_pssi.Init.MemBurst = DMA_MBURST_SINGLE;

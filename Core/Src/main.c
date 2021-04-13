@@ -31,6 +31,7 @@
 #include "usb_descriptors.h"
 #include "tusb.h"
 #include "img.h"
+#include "ov2640.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -114,6 +115,22 @@ const tusb_desc_webusb_url_t desc_url =
 };
 
 static bool web_serial_connected = false;
+
+static uint8_t buffer[320*240*2];
+static Frame_TypeDef frame = {
+		.buffer = buffer,
+		.length = sizeof(buffer),
+		.width = 320,
+		.height = 240
+};
+static OV2640_TypeDef OV2640 = {
+		.dcmi = &hdcmi,
+		.dma = &hdma_dcmi_pssi,
+		.i2c = &hi2c4,
+		.frame = &frame
+};
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -207,11 +224,18 @@ int main(void)
   MX_DMA_Init();
   MX_UART4_Init();
   MX_USB_OTG_HS_PCD_Init();
-  //MX_DCMI_Init();
-  //MX_I2C4_Init();
+  MX_DCMI_Init();
+  MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
   USB_Init();
   NVIC_SetPriority(OTG_HS_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY );
+
+  OV2640_Init(&OV2640);
+  OV2640_ReadID(&(OV2640.ID));
+  LOG("ID: %02X %02X \n\r", OV2640.ID.PIDH, OV2640.ID.PIDL);
+  OV2640_UXGAConfig();
+  OV2640_Start();
+
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -354,7 +378,7 @@ static void MX_DCMI_Init(void)
 {
 
   /* USER CODE BEGIN DCMI_Init 0 */
-
+  __HAL_RCC_DCMI_CLK_ENABLE();
   /* USER CODE END DCMI_Init 0 */
 
   /* USER CODE BEGIN DCMI_Init 1 */
@@ -367,7 +391,7 @@ static void MX_DCMI_Init(void)
   hdcmi.Init.HSPolarity = DCMI_HSPOLARITY_LOW;
   hdcmi.Init.CaptureRate = DCMI_CR_ALL_FRAME;
   hdcmi.Init.ExtendedDataMode = DCMI_EXTEND_DATA_8B;
-  hdcmi.Init.JPEGMode = DCMI_JPEG_DISABLE;
+  hdcmi.Init.JPEGMode = DCMI_JPEG_ENABLE;
   hdcmi.Init.ByteSelectMode = DCMI_BSM_ALL;
   hdcmi.Init.ByteSelectStart = DCMI_OEBS_ODD;
   hdcmi.Init.LineSelectMode = DCMI_LSM_ALL;
@@ -377,7 +401,8 @@ static void MX_DCMI_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN DCMI_Init 2 */
-
+	HAL_NVIC_SetPriority(DCMI_IRQn, 0 ,5);
+	HAL_NVIC_EnableIRQ(DCMI_IRQn);
   /* USER CODE END DCMI_Init 2 */
 
 }
@@ -520,12 +545,12 @@ static void MX_DMA_Init(void)
 {
 
   /* DMA controller clock enable */
-  __HAL_RCC_DMA1_CLK_ENABLE();
+  __HAL_RCC_DMA2_CLK_ENABLE();
 
   /* DMA interrupt init */
-  /* DMA1_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+  /* DMA2_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
 
 }
 
@@ -559,12 +584,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PH12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_12;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PG1 */
   GPIO_InitStruct.Pin = GPIO_PIN_1;
@@ -734,19 +753,28 @@ void cdc_task_handler(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	if ( tud_cdc_connected() )
-	{
-		// connected and there are data available
-		if ( tud_cdc_available() )
-		{
-			uint8_t buf[64];
-
-			uint32_t count = tud_cdc_read(buf, sizeof(buf));
-
-	        // echo back to both web serial and cdc
-	        echo_all(buf, count);
-	      }
-	}
+//	if ( tud_cdc_connected() )
+//	{
+//		// connected and there are data available
+//		if ( tud_cdc_available() )
+//		{
+//			uint8_t buf[64];
+//
+//			uint32_t count = tud_cdc_read(buf, sizeof(buf));
+//
+//	        // echo back to both web serial and cdc
+//	        echo_all(buf, count);
+//	      }
+//	}
+	  if(OV2640.time_show == 1)
+	  {
+		  OV2640.time_show = 0;
+		  for(int i = 0; i < 1024; i++)
+		  {
+			  if(i%32 == 0)LOG("\n\r");
+			  LOG("%02x ", OV2640.frame->buffer[i]);
+		  }
+	  }
     osDelay(1);
   }
   /* USER CODE END cdc_task_handler */

@@ -1694,6 +1694,12 @@ const unsigned char OV2640_352x288_JPEG[][2] =
 void OV2640_Init(OV2640_TypeDef *OV2640)
 {
   _OV2640 = OV2640;
+
+  HAL_GPIO_WritePin(GPIOH, GPIO_PIN_12, GPIO_PIN_RESET);
+  HAL_Delay(100);
+  HAL_GPIO_WritePin(GPIOH, GPIO_PIN_12, GPIO_PIN_SET);
+  HAL_Delay(100);
+
 }
 
 /**
@@ -2117,7 +2123,7 @@ void OV2640_ContrastConfig(uint8_t value1, uint8_t value2)
 
 void OV2640_Start(void)
 {
-	OV2640_DMA_Config(_OV2640->frame->buffer, _OV2640->frame->length);
+	OV2640_DMA_Config(_OV2640->frame->buffer, (_OV2640->frame->length)/4);
 }
 
 /**
@@ -2130,14 +2136,27 @@ void OV2640_DMA_Config(uint8_t *DMA_Memory0BaseAddr, uint32_t DMA_BufferSize)
 
   __HAL_RCC_DMA2_CLK_ENABLE();
 
-  HAL_DMA_Init(_OV2640->dma);
+  _OV2640->dma->Instance = DMA2_Stream1;
+  _OV2640->dma->Init.Request = DMA_REQUEST_DCMI;
+  _OV2640->dma->Init.Direction = DMA_PERIPH_TO_MEMORY;
+  _OV2640->dma->Init.PeriphInc = DMA_PINC_DISABLE;
+  _OV2640->dma->Init.MemInc = DMA_MINC_ENABLE;
+  _OV2640->dma->Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+  _OV2640->dma->Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+  _OV2640->dma->Init.Mode = DMA_CIRCULAR;
+  _OV2640->dma->Init.Priority = DMA_PRIORITY_VERY_HIGH;
+  _OV2640->dma->Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+  _OV2640->dma->Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+  _OV2640->dma->Init.MemBurst = DMA_MBURST_INC8;
+  _OV2640->dma->Init.PeriphBurst = DMA_PBURST_SINGLE;
 
   __HAL_LINKDMA(_OV2640->dcmi, DMA_Handle, *(_OV2640->dma));
+  HAL_DMA_Init(_OV2640->dma);
 
   HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
 
-  HAL_DCMI_Start_DMA(_OV2640->dcmi, DCMI_MODE_CONTINUOUS, (uint32_t)DMA_Memory0BaseAddr, DMA_BufferSize);
+  HAL_DCMI_Start_DMA(_OV2640->dcmi, DCMI_MODE_SNAPSHOT, (uint32_t)DMA_Memory0BaseAddr, DMA_BufferSize);
 }
 
 /**
@@ -2145,14 +2164,29 @@ void OV2640_DMA_Config(uint8_t *DMA_Memory0BaseAddr, uint32_t DMA_BufferSize)
   * @param  None
   * @retval None
   */
-void HAL_DCMI_VsyncEventCallback(DCMI_HandleTypeDef *hdcmi)
+void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)
 {
 	_OV2640->fps++;
-	_OV2640->time_show = 1;
 
 	//osSemaphoreAcquire(_OV2640->frame->sem_showHandle, wait);
 	LOG("\n\rfps:%d\n\r", _OV2640->fps);
+
+//	for(int i = 0; i < 1024; i++)
+//	{
+//		if(i%64 == 0)LOG("\n\r");
+//		LOG("%02X ", _OV2640->frame->buffer[i]);
+//	}
+	if(_OV2640->frame->buffer[0] == 0 && _OV2640->frame->buffer[1] == 0)
+	{
+		OV2640_Start();
+	}else{
+		LOG("CV %lu\n\r", _OV2640->frame->buffer);
+		_OV2640->time_show = 1;
+	}
+
 }
+
+
 
 
 /**
@@ -2219,3 +2253,5 @@ uint8_t OV2640_ReadReg(uint16_t Addr)
   /* return the read data */
   return Data;
 }
+
+
