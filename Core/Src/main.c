@@ -766,16 +766,16 @@ void cdc_task_handler(void *argument)
 //	        echo_all(buf, count);
 //	      }
 //	}
-	  if(OV2640.time_show == 1)
-	  {
-		  OV2640.time_show = 0;
-		  for(int i = 0; i < 1024; i++)
-		  {
-			  if(i%32 == 0)LOG("\n\r");
-			  LOG("%02x ", OV2640.frame->buffer[i]);
-		  }
-	  }
-    osDelay(1);
+//	  if(OV2640.time_show == 1)
+//	  {
+//		  OV2640.time_show = 0;
+//		  for(int i = 0; i < 1024; i++)
+//		  {
+//			  if(i%32 == 0)LOG("\n\r");
+//			  LOG("%02x ", OV2640.frame->buffer[i]);
+//		  }
+//	  }
+    osDelay(1000);
   }
   /* USER CODE END cdc_task_handler */
 }
@@ -796,20 +796,23 @@ void webserial_task_handler(void *argument)
   {
 	  if ( web_serial_connected )
 	  {
-		 uint32_t imgSize = 0;
-		 uint8_t *img = NULL;
-		 if(index == 0)
-		 {
-			 imgSize = sizeof(_img1);
-			 img = &_img1;
-			 index = 1;
-		 }else{
-			 imgSize = sizeof(_img2);
-			 img = &_img2;
-			 index = 0;
-		 }
+//		 uint32_t imgSize = 0;
+//		 uint8_t *img = NULL;
+//		 if(index == 0)
+//		 {
+//			 imgSize = sizeof(_img1);
+//			 img = &_img1;
+//			 index = 1;
+//		 }else{
+//			 imgSize = sizeof(_img2);
+//			 img = &_img2;
+//			 index = 0;
+//		 }
+		 if(OV2640.time_show  == 1){
 		uint32_t sentSize = 0;
 		uint32_t time_count = HAL_GetTick();
+		uint32_t imgSize = sizeof(buffer);
+		uint8_t *img = buffer;
 
 		image_header[4] = (imgSize & 0xFF000000) >> 24;
 		image_header[5] = (imgSize & 0xFF0000) >> 16;
@@ -818,14 +821,18 @@ void webserial_task_handler(void *argument)
 		tud_vendor_write(image_header, 8);
 		while(1)
 		{
-			const uint32_t sendSize = min(imgSize - sentSize, 64);
+			const uint32_t sendSize = min(imgSize - sentSize, 2048);
 			sentSize += tud_vendor_write(&img[sentSize], sendSize);
 			if(sentSize == imgSize)
 			{
 				break;
 			}
+			//LOG("CC time:%d sentSize:%d\n\r", HAL_GetTick() - time_count, sentSize);
 		}
+		OV2640.time_show = 0;
+		OV2640_Start();
 		LOG("Take time:%d\n\r", HAL_GetTick() - time_count);
+		}
 	  }
     //osDelay(5000);
   }

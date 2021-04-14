@@ -2176,11 +2176,10 @@ void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)
 //		if(i%64 == 0)LOG("\n\r");
 //		LOG("%02X ", _OV2640->frame->buffer[i]);
 //	}
-	if(_OV2640->frame->buffer[0] == 0 && _OV2640->frame->buffer[1] == 0)
+	if(_OV2640->fps <= 10)
 	{
 		OV2640_Start();
 	}else{
-		LOG("CV %lu\n\r", _OV2640->frame->buffer);
 		_OV2640->time_show = 1;
 	}
 
