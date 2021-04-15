@@ -1,4 +1,7 @@
 #MicroXplorer Configuration settings - do not modify
+CORTEX_M7.CPU_DCache=Enabled
+CORTEX_M7.CPU_ICache=Enabled
+CORTEX_M7.IPParameters=CPU_ICache,CPU_DCache
 DCMI.CaptureRate=DCMI_CR_ALL_FRAME
 DCMI.IPParameters=PCKPolarity,JPEGMode,CaptureRate
 DCMI.JPEGMode=DCMI_JPEG_ENABLE
@@ -81,7 +84,7 @@ MxCube.Version=6.1.1
 MxDb.Version=DB.6.0.10
 NVIC.BusFault_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
 NVIC.DCMI_PSSI_IRQn=true\:5\:0\:false\:false\:true\:true\:true\:true
-NVIC.DMA2_Stream1_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:true
+NVIC.DMA2_Stream1_IRQn=true\:5\:0\:false\:false\:true\:false\:false\:true
 NVIC.DebugMonitor_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
 NVIC.ForceEnableDMAVector=true
 NVIC.HardFault_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false

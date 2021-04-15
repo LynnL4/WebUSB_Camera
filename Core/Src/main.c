@@ -30,7 +30,7 @@
 #include <stdbool.h>
 #include "usb_descriptors.h"
 #include "tusb.h"
-//#include "img.h"
+#include "img.h"
 #include "ov2640.h"
 /* USER CODE END Includes */
 
@@ -203,6 +203,12 @@ int main(void)
 
   /* USER CODE END 1 */
 
+  /* Enable I-Cache---------------------------------------------------------*/
+  SCB_EnableICache();
+
+  /* Enable D-Cache---------------------------------------------------------*/
+  SCB_EnableDCache();
+
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -229,6 +235,33 @@ int main(void)
   /* USER CODE BEGIN 2 */
   USB_Init();
   NVIC_SetPriority(OTG_HS_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY );
+
+  uint8_t buf[2048]= {0};
+
+//  JFILE input = {
+//      .buffer = _acgg,
+//      .index = 0
+//  };
+//
+//  JFILE output = {
+//      .buffer = buffer,
+//      .index = 0
+//  };
+//
+//  uint32_t count = HAL_GetTick();
+//
+//  jpeg_encode(&input, &output, 320, 240, 90, buf);
+//
+//  LOG("JPEG take: %d\n\r", HAL_GetTick()-count);
+//
+//  LOG("length: %d\n\r", output.index);
+//
+//  for(int i = 0; i < 32; i++){
+//      for(int j = 0; j < 32; j++){
+//          LOG("%02x ", buffer[i*32 + j]);
+//      }
+//      LOG("\n\r");
+//  }
 
   OV2640_Init(&OV2640);
   OV2640_ReadID(&(OV2640.ID));
@@ -549,7 +582,7 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA2_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
 
 }

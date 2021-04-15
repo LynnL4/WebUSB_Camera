@@ -32,6 +32,8 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "jpeglib.h"
+#include "encode.h"
 
 /* USER CODE END Includes */
 
