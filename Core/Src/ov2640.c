@@ -2168,14 +2168,8 @@ void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)
 {
 	_OV2640->fps++;
 
-	//osSemaphoreAcquire(_OV2640->frame->sem_showHandle, wait);
 	LOG("\n\rfps:%d\n\r", _OV2640->fps);
 
-//	for(int i = 0; i < 1024; i++)
-//	{
-//		if(i%64 == 0)LOG("\n\r");
-//		LOG("%02X ", _OV2640->frame->buffer[i]);
-//	}
 	if(_OV2640->fps <= 10)
 	{
 		OV2640_Start();

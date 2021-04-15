@@ -30,7 +30,7 @@
 #include <stdbool.h>
 #include "usb_descriptors.h"
 #include "tusb.h"
-#include "img.h"
+//#include "img.h"
 #include "ov2640.h"
 /* USER CODE END Includes */
 
@@ -753,28 +753,6 @@ void cdc_task_handler(void *argument)
   /* Infinite loop */
   for(;;)
   {
-//	if ( tud_cdc_connected() )
-//	{
-//		// connected and there are data available
-//		if ( tud_cdc_available() )
-//		{
-//			uint8_t buf[64];
-//
-//			uint32_t count = tud_cdc_read(buf, sizeof(buf));
-//
-//	        // echo back to both web serial and cdc
-//	        echo_all(buf, count);
-//	      }
-//	}
-//	  if(OV2640.time_show == 1)
-//	  {
-//		  OV2640.time_show = 0;
-//		  for(int i = 0; i < 1024; i++)
-//		  {
-//			  if(i%32 == 0)LOG("\n\r");
-//			  LOG("%02x ", OV2640.frame->buffer[i]);
-//		  }
-//	  }
     osDelay(1000);
   }
   /* USER CODE END cdc_task_handler */
@@ -796,18 +774,6 @@ void webserial_task_handler(void *argument)
   {
 	  if ( web_serial_connected )
 	  {
-//		 uint32_t imgSize = 0;
-//		 uint8_t *img = NULL;
-//		 if(index == 0)
-//		 {
-//			 imgSize = sizeof(_img1);
-//			 img = &_img1;
-//			 index = 1;
-//		 }else{
-//			 imgSize = sizeof(_img2);
-//			 img = &_img2;
-//			 index = 0;
-//		 }
 		 if(OV2640.time_show  == 1){
 		uint32_t sentSize = 0;
 		uint32_t time_count = HAL_GetTick();
@@ -827,14 +793,12 @@ void webserial_task_handler(void *argument)
 			{
 				break;
 			}
-			//LOG("CC time:%d sentSize:%d\n\r", HAL_GetTick() - time_count, sentSize);
 		}
 		OV2640.time_show = 0;
 		OV2640_Start();
 		LOG("Take time:%d\n\r", HAL_GetTick() - time_count);
 		}
 	  }
-    //osDelay(5000);
   }
   /* USER CODE END webserial_task_handler */
 }
