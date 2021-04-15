@@ -117,6 +117,9 @@ const tusb_desc_webusb_url_t desc_url =
 static bool web_serial_connected = false;
 
 static uint8_t buffer[320*240*2];
+static uint8_t jpeg_buffer[32*1024];
+static uint8_t libjpeg_buffer[1024];
+
 static Frame_TypeDef frame = {
 		.buffer = buffer,
 		.length = sizeof(buffer),
@@ -236,21 +239,19 @@ int main(void)
   USB_Init();
   NVIC_SetPriority(OTG_HS_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY );
 
-  uint8_t buf[2048]= {0};
-
 //  JFILE input = {
-//      .buffer = _acgg,
+//      .buffer = gImage_rgb565,
 //      .index = 0
 //  };
 //
 //  JFILE output = {
-//      .buffer = buffer,
+//      .buffer = jpeg_buffer,
 //      .index = 0
 //  };
 //
 //  uint32_t count = HAL_GetTick();
 //
-//  jpeg_encode(&input, &output, 320, 240, 90, buf);
+//  jpeg_encode(&input, &output, 320, 240, 90, libjpeg_buffer);
 //
 //  LOG("JPEG take: %d\n\r", HAL_GetTick()-count);
 //
@@ -262,6 +263,7 @@ int main(void)
 //      }
 //      LOG("\n\r");
 //  }
+//   while(1){};
 
   OV2640_Init(&OV2640);
   OV2640_ReadID(&(OV2640.ID));
@@ -335,7 +337,7 @@ void SystemClock_Config(void)
 
   /** Supply configuration update enable
   */
-  HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY);
+  HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
   /** Configure the main internal regulator output voltage
   */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
@@ -807,11 +809,25 @@ void webserial_task_handler(void *argument)
   {
 	  if ( web_serial_connected )
 	  {
+		 uint32_t time_count = HAL_GetTick();
 		 if(OV2640.time_show  == 1){
+
+	    JFILE input = {
+	    		.buffer = buffer,
+				.index = 0
+	    };
+
+		JFILE output = {
+				.buffer = jpeg_buffer,
+				.index = 0
+		};
+
+
+	    jpeg_encode(&input, &output, 320, 240, 50, libjpeg_buffer);
+
 		uint32_t sentSize = 0;
-		uint32_t time_count = HAL_GetTick();
-		uint32_t imgSize = sizeof(buffer);
-		uint8_t *img = buffer;
+		uint32_t imgSize = output.index;
+		uint8_t *img = jpeg_buffer;
 
 		image_header[4] = (imgSize & 0xFF000000) >> 24;
 		image_header[5] = (imgSize & 0xFF0000) >> 16;

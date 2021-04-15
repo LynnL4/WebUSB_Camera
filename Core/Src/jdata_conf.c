@@ -24,22 +24,39 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
+/* Private uint8_tiables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
-size_t read_file (JFILE  *file, uint8_t *buf, uint32_t sizeofbuf)
+size_t read_file(JFILE *file, uint8_t *buf, uint32_t sizeofbuf)
 {
-    
-  memcpy (buf, file->buffer + file->index, sizeofbuf); 
-  return sizeofbuf; 
+    uint8_t *p_file = file->buffer + file->index;
+    for (int i = 0; i < sizeofbuf / 3; i++)
+    {
+        uint8_t byte_h = p_file[(2 * i) + 1];
+        uint8_t byte_l = p_file[2 * i];
+
+        uint8_t rr = byte_h & 0xf8;
+        uint8_t gg = ((byte_h << 5) & 0xff) | ((byte_l & 0xe0) >> 3);
+        uint8_t bb = (byte_l << 3) & 0xff;
+
+        //reparation
+        rr = rr | ((rr & 0x38) >> 3);
+        gg = gg | ((gg & 0x0c) >> 2);
+        bb = bb | ((bb & 0x38) >> 3);
+
+        buf[3 * i + 0] = rr;
+        buf[3 * i + 1] = gg;
+        buf[3 * i + 2] = bb;
+    }
+    return sizeofbuf;
 }
 
-size_t write_file (JFILE  *file, uint8_t *buf, uint32_t sizeofbuf)
+size_t write_file(JFILE *file, uint8_t *buf, uint32_t sizeofbuf)
 {
-  memcpy (file->buffer + file->index, buf , sizeofbuf); 
-  file ->index += sizeofbuf;
-  return sizeofbuf; 
+    memcpy(file->buffer + file->index, buf, sizeofbuf);
+    file->index += sizeofbuf;
+    return sizeofbuf;
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

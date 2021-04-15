@@ -48,7 +48,9 @@ void jpeg_encode(JFILE *file, JFILE *file1, uint32_t width, uint32_t height, uin
   /* Encode BMP Image to JPEG */  
   JSAMPROW row_pointer;    /* Pointer to a single row */
   uint32_t bytesread;
-  uint32_t index;
+
+  file->index = 0;
+  file1->index = 0;
 
   /* Step 1: allocate and initialize JPEG compression object */
   /* Set up the error handler */
@@ -80,16 +82,13 @@ void jpeg_encode(JFILE *file, JFILE *file1, uint32_t width, uint32_t height, uin
   jpeg_start_compress(&cinfo, TRUE);
 
  /* Get bitmap data address offset */
-  bytesread = JFREAD(file, buff, 14);
-  index = *(volatile uint16_t *) (buff + 10);
-  index |= (*(volatile uint16_t *) (buff + 12)) << 16;
 
   while (cinfo.next_scanline < cinfo.image_height)
   {          
     /* In this application, the input file is a BMP, which first encodes the bottom of the picture */
     /* JPEG encodes the highest part of the picture first. We need to read the lines upside down   */
     /* Move the read pointer to 'last line of the picture - next_scanline'    */
-    file->index = ((cinfo.image_height-1-cinfo.next_scanline)*width*3)+index;
+    file->index = (cinfo.next_scanline*width*2);
     if(JFREAD(file, buff, width*3) == width*3)
     {
       row_pointer = (JSAMPROW)buff;
